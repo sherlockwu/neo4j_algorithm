@@ -8,6 +8,9 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.ResourceIterator;
+
 
 public class App{
 
@@ -16,9 +19,14 @@ public class App{
 
     // relationship type
 	public enum RelationshipTypes implements RelationshipType {
-		IS_FRIEND_OF;
+		IS_FRIEND_OF,
+		HAS_SEEN;
 	}
 
+ 	public enum Labels implements Label {
+        	USER,
+        	MOVIE;
+    }
 
 	public static void main(String []args) {
         System.out.println("Hello, this is in Neo4j:\n");
@@ -29,20 +37,31 @@ public class App{
 			registerShutdownHook();
 		// Create Nodes
 			Transaction tx = graphDB.beginTx();
-	    	Node steve = graphDB.createNode();
+	    	Node steve = graphDB.createNode(Labels.USER);
             steve.setProperty("name", "Steve");
-        	Node tom = graphDB.createNode();
+        	Node tom = graphDB.createNode(Labels.USER);
 			tom.setProperty("name", "Tom");
-     	
+
+			Node divergent = graphDB.createNode(Labels.MOVIE);
+			divergent.setProperty("name", "Divergent");
+     		
 			tx.success();
 	  
 		// Create Relationship
 			tx = graphDB.beginTx();
 			steve.createRelationshipTo(tom, RelationshipTypes.IS_FRIEND_OF);
-			
+			Relationship relationship = steve.createRelationshipTo(divergent, RelationshipTypes.HAS_SEEN);
 			tx.success();
-
+			
 		// Begin some search
+			// Find all users
+			ResourceIterator<Node> users = graphDB.findNodes( Labels.USER );
+			System.out.println( "Users:" );
+			while( users.hasNext() )
+			{
+    			Node user = users.next();
+    			System.out.println( "\t" + user.getProperty( "name" ) );
+			}
 
     }
 
